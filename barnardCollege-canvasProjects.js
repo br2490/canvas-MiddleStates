@@ -10,7 +10,7 @@
 
 let currentCourseID = null; // current course id.
 const barnardCollegeAccountID = ['439'], // Barnard's Canvas account.parent_account_id
-      bc_middleStatesCourses = ["82207"]; // Courses considered for MS assessment
+bc_middleStatesCourses = ["82207"]; // Courses considered for MS assessment
 
 /**
 * Fetch current course ID number.
@@ -59,62 +59,8 @@ function bc_fixRubricAlignment() {
 let bcms_selectedRater = localStorage.getItem("barnardRater") || '0';
 
 /**
-* Open the full rubric grading view in Canvas' Speed Grader.
-* @param  {int} interval - timer interval ms
-*/
-let bc_openRubricView = ( (interval = 50) => {
-  let rubric_view = $('#rubric_full');
-  let button_full_rubric_view = $('button.toggle_full_rubric.edit.btn');
-  setInterval(() => { 
-    if (rubric_view.css('display') === "none")
-    button_full_rubric_view.click();
-  }, interval);
-});
-
-/**
-* 
-* @return {void} will exit function if not on an assignment page.
-*/
-function bcms_resizeSpeedGraderView(leftWidth = '25%', rightWidth = '75%') {
-  try {
-    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
-    return;
-    
-    let width_resizer = $('#full_width_container');
-    width_resizer.find('#left_side').css('width', leftWidth);
-    width_resizer.find('#right_side').css('width', rightWidth);
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-/**
-* 
-* @return {void} will exit function if not on an assignment page.
-*/
-function bcms_updateSpeedGraderCommentBox() {
-  try {
-    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
-    return;
-    
-    // Quickly open the rubric to marking (rating) mode.
-    bc_openRubricView(150);
-    
-    // Display
-    let div_assignment_comment = $('.content_box:contains("Assignment Comments")');
-    div_assignment_comment.prependTo(div_assignment_comment.prev());
-    let h2_assignment_comment = div_assignment_comment.find('h2:contains("Assignment Comments")');
-    h2_assignment_comment.text('Student Name');
-    let input_assignment_comment_placeholder = div_assignment_comment.find('textarea#speed_grader_comment_textarea');
-    input_assignment_comment_placeholder.attr('placeholder', 'Student Name');
-    
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-/**
-* [bcms_addRaterSelectToPage description]
+* Add a dropdown containing a list of "raters" for users to select. Selection hides
+* all other assignments on the page.
 * @return {[type]} [description]
 */
 function bcms_addRaterSelectToPage() {
@@ -161,6 +107,87 @@ function bcms_addRaterSelectToPage() {
     console.error(`Error @bcms_addRaterSelectToPage(): ${e}`);
   }
 }
+
+/**
+* Open the full rubric grading view in Canvas' Speed Grader.
+* @param  {int} interval - timer interval ms
+*/
+let bc_openRubricView = ( (interval = 50) => {
+  let rubric_view = $('#rubric_full');
+  let button_full_rubric_view = $('button.toggle_full_rubric.edit.btn');
+  setInterval(() => { 
+    if (rubric_view.css('display') === "none")
+    button_full_rubric_view.click();
+  }, interval);
+});
+
+/**
+* Resize the Speed Grader view to display the entire rubric without being cramped.
+* @return {void} will exit function if not on an assignment page.
+*/
+function bcms_resizeSpeedGraderView(leftWidth = '25%', rightWidth = '75%') {
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+    
+    let width_resizer = $('#full_width_container');
+    width_resizer.find('#left_side').css('width', leftWidth);
+    width_resizer.find('#right_side').css('width', rightWidth);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+/**
+* Modify the Comment box to "Student Name"
+* @TODO: Integrate Term/Course/User drop-down for selection of students.
+*
+* @return {void} will exit function if not on an assignment page.
+*/
+function bcms_updateSpeedGraderCommentBox() {
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+    
+    // Quickly open the rubric to marking (rating) mode.
+    bc_openRubricView(150);
+    
+    // Display
+    let div_assignment_comment = $('.content_box:contains("Assignment Comments")');
+    div_assignment_comment.prependTo(div_assignment_comment.prev());
+    let h2_assignment_comment = div_assignment_comment.find('h2:contains("Assignment Comments")');
+    h2_assignment_comment.text('Student Name');
+    let input_assignment_comment_placeholder = div_assignment_comment.find('textarea#speed_grader_comment_textarea');
+    input_assignment_comment_placeholder.attr('placeholder', 'Student Name');
+    
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+/**
+ * Add button to save and view the next student in Speed Grader.
+ */
+function bcms_addSpeedGraderSaveNextButton() {
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+    
+    $( '<button />' , {
+      id: 'bcms-save-and-next-student',
+      class: 'Button next',
+      type: 'button',
+      text: 'Save and Next Student'
+    }).on("click", event => {
+      $('.comment_submit_button').click();
+      $('.icon-arrow-right.next').click();
+    }).insertAfter('button.save_rubric_button.Button.Button--primary');
+    
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 
 /**
 * Prompt user to view the Speed Grader section of an assignment
@@ -231,7 +258,7 @@ function bcms_getCourseList() {
     });
   }
   
-  
+
   /**
   * 
   * @param {*} str_value 
@@ -254,13 +281,13 @@ function bcms_getCourseList() {
     
     // @todo: create object, run these
     bcms_addRaterSelectToPage();
+
+    bcms_addSpeedGraderSaveNextButton();
     bcms_resizeSpeedGraderView();
     bcms_updateSpeedGraderCommentBox();
     bcms_promptDirectToSpeedGrader()
   }
-  
-  // Fin'
-  
+
   /**
   * Document ready.
   */
