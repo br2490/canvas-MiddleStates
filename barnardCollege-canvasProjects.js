@@ -8,6 +8,88 @@
 * @author Benjamin Rosner, br2490
 */
 
+/*********** Dev code start -- Marko K. ***********/
+/*********** Dev code start -- Marko K. ***********/
+/*********** Dev code start -- Marko K. ***********/
+
+// Test data ideally structured
+var terms = {'1': 'Spring-2017', 
+             '2': 'Fall-2017', 
+             '3': 'Spring-2018', 
+             '4':'Fall-2018'}
+
+var courses = {'1': ['Intro-to-Bio', 'Algebra II'], 
+               '2': ['Chem 202', 'Calculus I'], 
+               '3': ['Literature 101', 'Poetry 200', 'GIS 101'], 
+               '4': ['Intro to CS', 'Geology 101']}
+
+
+// Create term select object; populate with terms.
+function termSelect(terms) {
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+    
+    let term_select = $( '<select />', {class: 'bc-ms', id: 'term-select'} );
+    term_select.append(createSelectOption( '0', 'Select Term'));
+
+    $.each(terms, function(key, value) {   
+      term_select.append().append($("<option></option>")
+                     .attr("value", key)
+                     .text(value));
+    });
+    term_select.appendTo('.content_box');
+  } catch (e) {
+  console.error(e);
+  }
+}
+
+
+// Create course select object.
+function courseSelect(courses) {
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+
+    let course_select = $( '<select />', {class: 'bc-ms', id: 'course-select'} );
+        course_select.append(createSelectOption( '0', 'Select Course'));
+        course_select.appendTo('.content_box');  
+
+  } catch (e) {
+  console.error(e);
+  }
+}
+
+
+// Handle term changes
+// Updates course-select options based on term selection
+// ToDos: update value attribute w/ course IDs
+function handleTermSelect(courses) {
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+
+    $("#term-select").change(function(){
+      // Empty select object before creating new options.
+      $('#course-select').empty().append(createSelectOption('0', 'Select Course')) 
+      let term_selected_id = $(this).val();
+      let courses_array = courses[term_selected_id]
+      $.each(courses_array, function(index, value) {
+          $("#course-select").append().append($("<option></option>")
+                    .attr("value", index)
+                    .text(value));
+      })
+    });
+  } catch (e) {
+  console.error(e);
+  }
+}
+/*********** Dev code end -- Marko K. ************/
+/*********** Dev code end -- Marko K. ************/
+/*********** Dev code end -- Marko K. ************/
+
+
+
 let currentCourseID = null; // current course id.
 const barnardCollegeAccountID = ['439'], // Barnard's Canvas account.parent_account_id
 bc_middleStatesCourses = ["82207"]; // Courses considered for MS assessment
@@ -285,7 +367,14 @@ function bcms_getCourseList() {
     bcms_addSpeedGraderSaveNextButton();
     bcms_resizeSpeedGraderView();
     bcms_updateSpeedGraderCommentBox();
-    bcms_promptDirectToSpeedGrader()
+    bcms_promptDirectToSpeedGrader();
+
+    // Testing/Dev - Marko
+    termSelect(terms);
+    handleTermSelect(courses)
+    courseSelect(courses);
+    
+
   }
 
   /**
@@ -301,4 +390,3 @@ function bcms_getCourseList() {
   } catch( e ) {
     console.error(`document.ready(): ${e}`);
   }
-  
