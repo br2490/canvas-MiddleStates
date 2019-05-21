@@ -12,20 +12,38 @@
 /*********** Dev code start -- Marko K. ***********/
 /*********** Dev code start -- Marko K. ***********/
 
-// Test data ideally structured
-var terms = {'1': 'Spring-2017', 
-             '2': 'Fall-2017', 
-             '3': 'Spring-2018', 
-             '4':'Fall-2018'}
 
-var courses = {'1': ['Intro-to-Bio', 'Algebra II'], 
-               '2': ['Chem 202', 'Calculus I'], 
-               '3': ['Literature 101', 'Poetry 200', 'GIS 101'], 
-               '4': ['Intro to CS', 'Geology 101']}
 
+// Get data
+function get_term_and_course_data() {
+  // Temporary solution -- will update.
+  $.ajaxSetup({ async: false });
+
+  const barnardCollegeAccountID = ['439']; // Barnard sub-account
+  let terms = {}; // object to hold terms
+  let courses = []; // Array to hold courses
+  $.getJSON(
+    // Canvas course API,
+    `${window.location.origin}/api/v1/users/${ENV.current_user.id}/courses?include[]=term&include[]=account&per_page=150`, 
+    // results as data.
+    data => {
+      $.each(data, (key, value) => {
+        if ( !barnardCollegeAccountID.includes(value.account.parent_account_id) ) return; // Continue with Barnard Courses.
+        if ( !terms[value.term.id] ) { 
+          terms[value.term.id] = value.term.name; // while this will only hold unique values,
+        }
+        courses.push({ 'id': value.id, 'name': value.name, 'term': value.term.id });
+      });  
+    }).fail( (xhr, status, error) => {
+      console.error(`Failed to get API response. ${error}`);
+    });
+
+    $.ajaxSetup({ async: true });
+    return {terms, courses}
+}
 
 // Create term select object; populate with terms.
-function termSelect(terms) {
+function createTermSelect(terms) {
   try {
     if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
     return;
@@ -46,7 +64,7 @@ function termSelect(terms) {
 
 
 // Create course select object.
-function courseSelect(courses) {
+function createCourseSelect() {
   try {
     if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
     return;
@@ -54,6 +72,22 @@ function courseSelect(courses) {
     let course_select = $( '<select />', {class: 'bc-ms', id: 'course-select'} );
         course_select.append(createSelectOption( '0', 'Select Course'));
         course_select.appendTo('.content_box');  
+
+  } catch (e) {
+  console.error(e);
+  }
+}
+
+
+// Create student select object.
+function createStudentSelect() {
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+
+    let student_select = $( '<select />', {class: 'bc-ms', id: 'student-select'} );
+        student_select.append(createSelectOption( '0', 'Select Student'));
+        student_select.appendTo('.content_box');  
 
   } catch (e) {
   console.error(e);
@@ -73,17 +107,69 @@ function handleTermSelect(courses) {
       // Empty select object before creating new options.
       $('#course-select').empty().append(createSelectOption('0', 'Select Course')) 
       let term_selected_id = $(this).val();
-      let courses_array = courses[term_selected_id]
-      $.each(courses_array, function(index, value) {
-          $("#course-select").append().append($("<option></option>")
-                    .attr("value", index)
-                    .text(value));
+      let filtered_courses = courses.filter(course => { return course.term == term_selected_id})
+
+      $.each(filtered_courses, function(index, value) {
+        $("#course-select").append().append($("<option></option>")
+                    .attr("value", value.id)
+                    .text(value.name));
       })
     });
   } catch (e) {
   console.error(e);
   }
 }
+
+
+// Create course select object.
+function get_student_list(course_id) {
+  $.ajaxSetup({ async: false });
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+
+    let students = []
+
+     $.getJSON(
+      `${window.location.origin}/api/v1/courses/${course_id}/enrollments`,
+        data => {
+          $.each(data, (key, value) => {
+            students.push({ 'id': value.user.id, 'name': value.user.name });
+          });
+        }).fail( (xhr, status, error) => {
+          console.error(`Failed to get API response. ${error}`);
+        });
+        $.ajaxSetup({ async: true });
+        return students
+  } catch (e) {
+  console.error(e);
+  }
+}
+
+
+function handleCourseSelect() {
+  try {
+    if (ENV.CONTEXT_ACTION_SOURCE !== "speed_grader")
+    return;
+
+    $("#course-select").change(function(){
+      $('#student-select').empty().append(createSelectOption('0', 'Select Student')) // Empty select options
+      
+      let course_selected_id = $(this).val();      
+      let students = get_student_list(course_selected_id)
+
+      $.each(students, function(index, value) {
+        $("#student-select").append().append($("<option></option>")
+                    .attr("value", value.id)
+                    .text(value.name));
+      })
+    });
+  } catch (e) {
+  console.error(e);
+  }
+}
+
+
 /*********** Dev code end -- Marko K. ************/
 /*********** Dev code end -- Marko K. ************/
 /*********** Dev code end -- Marko K. ************/
@@ -341,6 +427,64 @@ function bcms_getCourseList() {
   }
   
 
+
+
+
+/**
+* IN DEVELOPMENT.
+*/
+function bcms_getCourseList_DEV() { 
+  const barnardCollegeAccountID = ['439']; // Barnard sub-account
+  let terms = {}; // object to hold terms
+  let courses = {}; // object to hold courses
+  
+  let termSelect = $( '<select />', {class: 'bc-ms', id: 'term-dropdown', 'selectedIndex': 0} );  
+  termSelect.append(createSelectOption(0, 'Select a Term', true));
+  
+  let courseSelect = $( '<select />', {class: 'bc-ms', id: 'course-dropdown', 'selectedIndex': 0} );  
+  courseSelect.append(createSelectOption(0, 'Select a Course', true));
+  
+  $.getJSON(
+    // Canvas course API,
+    `${window.location.origin}/api/v1/users/${ENV.current_user.id}/courses?include[]=term&include[]=account&per_page=150`, 
+    // results as data.
+    data => {
+      $.each(data, (key, value) => {
+        if ( !barnardCollegeAccountID.includes(value.account.parent_account_id) ) return; // Continue with Barnard Courses.
+
+          console.log(data)
+        
+        // There can be duplicate terms since we're starting at the COURSE level.
+        //if ( !terms[value.term.id] ) { 
+        //  terms[value.term.id] = value.term.name; // while this will only hold unique values,
+        //  termSelect.append(createSelectOption(value.term.id, value.term.name, false)); // this will dupe, so only pass wyn.
+        //}
+        
+        // Create the course options:
+        //courses[value.id] = {'name': value.name, 'term': value.term.id};
+        //courseSelect.append(createSelectOption(value.id, value.name, false));
+      
+
+      });
+      
+      // debug
+      //console.log(terms, courses, courseSelect, termSelect);
+      //$('body').append(termSelect);
+      //$('body').append(courseSelect);
+      
+    }).fail( (xhr, status, error) => {
+      console.error(`Failed to get API response. ${error}`);
+    });
+  }
+
+
+
+
+
+
+
+
+
   /**
   * 
   * @param {*} str_value 
@@ -370,10 +514,15 @@ function bcms_getCourseList() {
     bcms_promptDirectToSpeedGrader();
 
     // Testing/Dev - Marko
-    termSelect(terms);
-    handleTermSelect(courses)
-    courseSelect(courses);
-    
+    var result = get_term_and_course_data()
+    var terms = result.terms;
+    var courses = result.courses;
+
+    createTermSelect(terms);
+    createCourseSelect();
+    createStudentSelect();
+    handleTermSelect(courses);
+    handleCourseSelect();
 
   }
 
