@@ -6,20 +6,22 @@
 *
 * @date 2019-05-14
 * @author Benjamin Rosner, br2490
+* @author Marko Krkeljas, mk4200
 */
 
-/*********** Dev code start -- Marko K. ***********/
-/*********** Dev code start -- Marko K. ***********/
-/*********** Dev code start -- Marko K. ***********/
+let currentCourseID = null; // current course id.
+const barnardCollegeAccountID = ['439'], // Barnard's Canvas account.parent_account_id
+    bc_middleStatesCourses = ["82207"]; // Courses considered for MS assessment
 
-
+/*********** Dev code start -- Marko K. ***********/
+/*********** Dev code start -- Marko K. ***********/
+/*********** Dev code start -- Marko K. ***********/
 
 // Get data
 function get_term_and_course_data() {
   // Temporary solution -- will update.
   $.ajaxSetup({ async: false });
 
-  const barnardCollegeAccountID = ['439']; // Barnard sub-account
   let terms = {}; // object to hold terms
   let courses = []; // Array to hold courses
   $.getJSON(
@@ -52,7 +54,7 @@ function createTermSelect(terms) {
     term_select.append(createSelectOption( '0', 'Select Term'));
 
     $.each(terms, function(key, value) {   
-      term_select.append().append($("<option></option>")
+      term_select.append().append($("<option />")
                      .attr("value", key)
                      .text(value));
     });
@@ -110,7 +112,7 @@ function handleTermSelect(courses) {
       let filtered_courses = courses.filter(course => { return course.term == term_selected_id})
 
       $.each(filtered_courses, function(index, value) {
-        $("#course-select").append().append($("<option></option>")
+        $("#course-select").append().append($("<option />")
                     .attr("value", value.id)
                     .text(value.name));
       })
@@ -159,7 +161,7 @@ function handleCourseSelect() {
       let students = get_student_list(course_selected_id)
 
       $.each(students, function(index, value) {
-        $("#student-select").append().append($("<option></option>")
+        $("#student-select").append().append($("<option />")
                     .attr("value", value.id)
                     .text(value.name));
       })
@@ -176,9 +178,7 @@ function handleCourseSelect() {
 
 
 
-let currentCourseID = null; // current course id.
-const barnardCollegeAccountID = ['439'], // Barnard's Canvas account.parent_account_id
-bc_middleStatesCourses = ["82207"]; // Courses considered for MS assessment
+
 
 /**
 * Fetch current course ID number.
